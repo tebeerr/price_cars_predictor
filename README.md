@@ -1,6 +1,6 @@
 # Valuer: used-car price dashboard
 
-A web dashboard for the regression models in `cars_price_prediction_merged.ipynb`. You enter a car's details and get its predicted selling price, recalculated as you type.
+A web dashboard for the regression models in `cars_price_prediction_merged.ipynb`. You enter a car's details and get its predicted selling price in Tunisian dinars (TND), recalculated as you type.
 
 ```
 cars_merged_extended.csv            dataset (8,510 CarDekho listings)
@@ -43,14 +43,14 @@ npm run dev                     # http://localhost:5173  (/api is proxied to :80
 | Split / scaling | 80/20, `random_state=2`, `StandardScaler` fitted on train | same |
 | Models | `LinearRegression`, `LassoCV(cv=5)` | both are served, and the UI switches between them |
 
-Test-set results after retraining: Linear R² 0.899 (log) / 0.815 (lakh), MAE 1.43 lakh; Lasso R² 0.899 / 0.804, MAE 1.46 lakh.
+Test-set results after retraining: Linear R² 0.899 (log) / 0.815 (price), MAE 1.43 lakh (≈ 4,516 DT); Lasso R² 0.899 / 0.804, MAE 1.46 lakh (≈ 4,607 DT).
 
 ## API
 
 | Method | Path | Returns |
 |---|---|---|
 | GET | `/api/meta` | brands, allowed values, input ranges, train/test metrics |
-| POST | `/api/predict` | price per model in lakh and ₹, 80 % band, per-feature effects, price by model year |
+| POST | `/api/predict` | price per model in TND, 80 % band, per-feature effects, price by model year |
 
 Example request body:
 
@@ -64,12 +64,29 @@ Interactive API docs are at `http://localhost:8000/docs`.
 
 ## What the dashboard shows
 
-- **Estimated price** in lakh and ₹, plus the other model's figure for comparison.
+- **Estimated price** in Tunisian dinars, plus the other model's figure for comparison.
 - **80 % band**: the 10th to 90th percentile of the models' log-errors on held-out test cars, applied around this estimate.
 - **Same car, other model years**: the predicted price if only the year changed. Click a point on the curve to apply that year.
 - **What moves this price**: each input's term (coefficient × standardised value) against the average training car. This is exact for a linear model on log-price. Brand dummies are summed into one row.
 - **How far to trust it**: train and test R² and MAE for both models.
 - **Saved estimates**: kept in your browser's localStorage.
+
+## Currency: Tunisian dinars
+
+The model was trained on Indian prices in lakh (1 lakh = ₹100,000). The API converts every price to TND in one place (`to_tnd` in `backend/app.py`):
+
+```
+price_tnd = price_lakh × 100,000 × TND_PER_INR
+```
+
+`TND_PER_INR` defaults to **0.0315** (mid-market rate, early November 2026: 1 lakh ≈ 3,150 DT). Override it when the rate moves:
+
+```bash
+set TND_PER_INR=0.0320          # PowerShell: $env:TND_PER_INR="0.0320"
+uvicorn app:app --port 8000
+```
+
+This only converts the currency. It does not reprice cars for the Tunisian market, where import duties and local demand give different prices. For true Tunisian prices, the model must be retrained on Tunisian listings.
 
 ## Notes and limits
 

@@ -21,6 +21,16 @@ import train
 ModelName = Literal["linear", "lasso"]
 
 LAKH = 100_000  # 1 lakh = 100,000 INR
+# The model is trained on CarDekho prices in lakh (INR). Every price the API
+# returns is converted to Tunisian dinars with this rate (TND per 1 INR).
+# Default: ~0.0315, mid-market rate in early November 2026. Override with
+# the TND_PER_INR environment variable.
+TND_PER_INR = float(os.getenv("TND_PER_INR", "0.0315"))
+TND_PER_LAKH = LAKH * TND_PER_INR
+
+
+def to_tnd(lakhs: float) -> float:
+    return round(float(lakhs) * TND_PER_LAKH, 2)
 
 
 @lru_cache(maxsize=1)
@@ -57,10 +67,9 @@ class Contribution(BaseModel):
 
 
 class ModelPrediction(BaseModel):
-    price_lakhs: float
-    price_inr: int
-    low_lakhs: float
-    high_lakhs: float
+    price_tnd: float
+    low_tnd: float
+    high_tnd: float
     contributions: list[Contribution]
     depreciation: list[dict]
 
@@ -111,10 +120,19 @@ def health() -> dict:
 @app.get("/api/meta")
 def meta() -> dict:
     art = load_artifact()
+    metrics = {
+        name: {
+            **m,
+            "train": {**m["train"], "mae_tnd": to_tnd(m["train"]["mae_lakhs"])},
+            "test": {**m["test"], "mae_tnd": to_tnd(m["test"]["mae_lakhs"])},
+        }
+        for name, m in art["metrics"].items()
+    }
     return {
         **art["meta"],
         "reference_year": art["reference_year"],
-        "metrics": art["metrics"],
+        "metrics": metrics,
+        "currency": {"code": "TND", "tnd_per_inr": TND_PER_INR, "tnd_per_lakh": TND_PER_LAKH},
     }
 
 
@@ -140,11 +158,10 @@ def predict(car: CarInput) -> PredictionResponse:
         price = float(np.exp(log_pred))
         curve = np.exp(model.predict(z_curve))
         out[name] = ModelPrediction(
-            price_lakhs=round(price, 4),
-            price_inr=int(round(price * LAKH)),
-            low_lakhs=round(price * float(np.exp(m["residual_q10"])), 4),
-            high_lakhs=round(price * float(np.exp(m["residual_q90"])), 4),
+            price_tnd=to_tnd(price),
+            low_tnd=to_tnd(price * float(np.exp(m["residual_q10"]))),
+            high_tnd=to_tnd(price * float(np.exp(m["residual_q90"]))),
             contributions=contributions(model, z[0], art["feature_columns"]),
-            depreciation=[{"year": y, "price_lakhs": round(float(p), 4)} for y, p in zip(years, curve)],
+            depreciation=[{"year": y, "price_tnd": to_tnd(p)} for y, p in zip(years, curve)],
         )
     return PredictionResponse(input=car, predictions=out)

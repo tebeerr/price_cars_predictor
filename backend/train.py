@@ -58,7 +58,7 @@ def evaluate(model, X, y_log) -> dict[str, float]:
     pred_log = model.predict(X)
     return {
         "r2_log": float(metrics.r2_score(y_log, pred_log)),
-        "r2_lakhs": float(metrics.r2_score(np.exp(y_log), np.exp(pred_log))),
+        "r2_price": float(metrics.r2_score(np.exp(y_log), np.exp(pred_log))),
         "mae_lakhs": float(metrics.mean_absolute_error(np.exp(y_log), np.exp(pred_log))),
     }
 
@@ -136,7 +136,7 @@ def main() -> None:
     print(f"Saved {ARTIFACT_PATH}")
     for name in models:
         t = report[name]["test"]
-        print(f"  {name:<6}  test R2(log)={t['r2_log']:.4f}  R2(lakhs)={t['r2_lakhs']:.4f}  MAE={t['mae_lakhs']:.3f} lakhs")
+        print(f"  {name:<6}  test R2(log)={t['r2_log']:.4f}  R2(price)={t['r2_price']:.4f}  MAE={t['mae_lakhs']:.3f} lakhs")
 
 
 if __name__ == "__main__":
