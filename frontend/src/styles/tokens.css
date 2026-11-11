@@ -1,0 +1,116 @@
+/* Hallmark · macrostructure: Workbench · genre: modern-minimal · theme: Quiet (warm paper variant)
+ * tone: utilitarian-precise · anchor hue: ink neutral, data hues blue 255 / red 25
+ * Data pair validated with dataviz validate_palette.js (light + dark: all checks pass).
+ */
+:root {
+  /* Surfaces & ink — light */
+  --color-paper: oklch(98.5% 0.004 91.4);
+  --color-paper-2: oklch(96.4% 0.005 91.4);
+  --color-paper-3: oklch(93.2% 0.006 91.4);
+  --color-surface: oklch(99.6% 0.002 91.4);
+  --color-ink: oklch(19.5% 0.008 90);
+  --color-ink-2: oklch(42% 0.008 90);
+  --color-ink-3: oklch(55% 0.008 90);
+  --color-rule: oklch(89.5% 0.006 91.4);
+  --color-rule-strong: oklch(80% 0.008 91.4);
+
+  /* Action — ink-led; no decorative accent */
+  --color-action: oklch(19.5% 0.008 90);
+  --color-action-hover: oklch(32% 0.008 90);
+  --color-on-action: oklch(98.5% 0.004 91.4);
+  --color-focus: oklch(57.5% 0.163 255.5);
+
+  /* Data — diverging pair (blue raises, red lowers) + neutral midpoint */
+  --color-data-up: oklch(57.5% 0.163 255.5);
+  --color-data-down: oklch(62.3% 0.191 24.9);
+  --color-data-line: oklch(57.5% 0.163 255.5);
+  --color-data-band: oklch(57.5% 0.163 255.5 / 0.12);
+  --color-data-mid: oklch(95.2% 0.004 91.4);
+  --color-danger-ink: oklch(48% 0.17 25);
+  --color-danger-wash: oklch(96% 0.025 25);
+
+  /* Type */
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-hero: clamp(3.25rem, 2.2rem + 4.2vw, 5.75rem);
+
+  /* Space — 4 pt scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+  --rule-hair: 1px solid var(--color-rule);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+
+  --topbar-h: 3.5rem;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-paper: oklch(17% 0.004 106.8);
+    --color-paper-2: oklch(21% 0.004 106.8);
+    --color-paper-3: oklch(26% 0.005 106.8);
+    --color-surface: oklch(19.5% 0.004 106.8);
+    --color-ink: oklch(94.5% 0.004 91.4);
+    --color-ink-2: oklch(80% 0.01 95);
+    --color-ink-3: oklch(66% 0.008 95);
+    --color-rule: oklch(29% 0.005 106.8);
+    --color-rule-strong: oklch(38% 0.006 106.8);
+    --color-action: oklch(94.5% 0.004 91.4);
+    --color-action-hover: oklch(85% 0.004 91.4);
+    --color-on-action: oklch(17% 0.004 106.8);
+    --color-focus: oklch(62.2% 0.161 255.1);
+    --color-data-up: oklch(62.2% 0.161 255.1);
+    --color-data-down: oklch(66.9% 0.159 22.3);
+    --color-data-line: oklch(62.2% 0.161 255.1);
+    --color-data-band: oklch(62.2% 0.161 255.1 / 0.18);
+    --color-data-mid: oklch(34% 0.005 106.7);
+    --color-danger-ink: oklch(76% 0.13 25);
+    --color-danger-wash: oklch(26% 0.05 25);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-paper: oklch(17% 0.004 106.8);
+  --color-paper-2: oklch(21% 0.004 106.8);
+  --color-paper-3: oklch(26% 0.005 106.8);
+  --color-surface: oklch(19.5% 0.004 106.8);
+  --color-ink: oklch(94.5% 0.004 91.4);
+  --color-ink-2: oklch(80% 0.01 95);
+  --color-ink-3: oklch(66% 0.008 95);
+  --color-rule: oklch(29% 0.005 106.8);
+  --color-rule-strong: oklch(38% 0.006 106.8);
+  --color-action: oklch(94.5% 0.004 91.4);
+  --color-action-hover: oklch(85% 0.004 91.4);
+  --color-on-action: oklch(17% 0.004 106.8);
+  --color-focus: oklch(62.2% 0.161 255.1);
+  --color-data-up: oklch(62.2% 0.161 255.1);
+  --color-data-down: oklch(66.9% 0.159 22.3);
+  --color-data-line: oklch(62.2% 0.161 255.1);
+  --color-data-band: oklch(62.2% 0.161 255.1 / 0.18);
+  --color-data-mid: oklch(34% 0.005 106.7);
+  --color-danger-ink: oklch(76% 0.13 25);
+  --color-danger-wash: oklch(26% 0.05 25);
+  color-scheme: dark;
+}
