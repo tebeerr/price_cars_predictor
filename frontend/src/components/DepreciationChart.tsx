@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CurvePoint, ModelMetrics } from "../api";
-import { formatInr, formatLakhs } from "../format";
+import { formatTnd, formatTndShort } from "../format";
 
 interface Props {
   points: CurvePoint[];
@@ -44,13 +44,13 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
     const years = points.map((p) => p.year);
     const x0 = Math.min(...years);
     const x1 = Math.max(...years);
-    const yTicks = niceTicks(Math.max(...points.map((p) => p.price_lakhs * hi)));
+    const yTicks = niceTicks(Math.max(...points.map((p) => p.price_tnd * hi)));
     const yMax = yTicks[yTicks.length - 1];
     const x = (yr: number) => M.left + ((yr - x0) / Math.max(1, x1 - x0)) * innerW;
     const y = (v: number) => M.top + innerH - (v / yMax) * innerH;
-    const line = points.map((p, i) => `${i ? "L" : "M"}${x(p.year).toFixed(1)},${y(p.price_lakhs).toFixed(1)}`).join("");
-    const upper = points.map((p, i) => `${i ? "L" : "M"}${x(p.year).toFixed(1)},${y(p.price_lakhs * hi).toFixed(1)}`).join("");
-    const lower = [...points].reverse().map((p) => `L${x(p.year).toFixed(1)},${y(p.price_lakhs * lo).toFixed(1)}`).join("");
+    const line = points.map((p, i) => `${i ? "L" : "M"}${x(p.year).toFixed(1)},${y(p.price_tnd).toFixed(1)}`).join("");
+    const upper = points.map((p, i) => `${i ? "L" : "M"}${x(p.year).toFixed(1)},${y(p.price_tnd * hi).toFixed(1)}`).join("");
+    const lower = [...points].reverse().map((p) => `L${x(p.year).toFixed(1)},${y(p.price_tnd * lo).toFixed(1)}`).join("");
     const step = innerW / Math.max(1, points.length - 1);
     const xTickEvery = step < 28 ? (step < 16 ? 4 : 2) : 1;
     return { x, y, line, band: `${upper}${lower}Z`, yTicks, innerW, step, xTickEvery };
@@ -82,7 +82,7 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
           height={H}
           viewBox={`0 0 ${width} ${H}`}
           role="img"
-          aria-label={`Predicted price by model year, from ${formatLakhs(points[0].price_lakhs)} lakh in ${points[0].year} to ${formatLakhs(points[points.length - 1].price_lakhs)} lakh in ${points[points.length - 1].year}. Use left and right arrows to inspect years; Enter to apply.`}
+          aria-label={`Predicted price by model year, from ${formatTnd(points[0].price_tnd)} in ${points[0].year} to ${formatTnd(points[points.length - 1].price_tnd)} in ${points[points.length - 1].year}. Use left and right arrows to inspect years; Enter to apply.`}
           tabIndex={0}
           onPointerMove={(e) => setHover(yearAt(e.clientX, e.currentTarget))}
           onPointerLeave={() => setHover(null)}
@@ -103,7 +103,7 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
             <g key={t}>
               <line className="chart__grid" x1={M.left} x2={width - M.right} y1={geo.y(t)} y2={geo.y(t)} />
               <text className="chart__tick" x={M.left - 8} y={geo.y(t)} dy="0.32em" textAnchor="end">
-                {t}
+                {formatTndShort(t)}
               </text>
             </g>
           ))}
@@ -115,7 +115,7 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
             ) : null,
           )}
           <text className="chart__tick" x={M.left - 8} y={10} textAnchor="end">
-            lakh
+            DT
           </text>
 
           <path className="chart__band" d={geo.band} />
@@ -123,10 +123,10 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
 
           <line className="chart__cross" x1={geo.x(active.year)} x2={geo.x(active.year)} y1={M.top} y2={H - M.bottom} />
           {sel && (
-            <circle className="chart__dot chart__dot--sel" cx={geo.x(sel.year)} cy={geo.y(sel.price_lakhs)} r={5} />
+            <circle className="chart__dot chart__dot--sel" cx={geo.x(sel.year)} cy={geo.y(sel.price_tnd)} r={5} />
           )}
           {hover != null && hover !== selectedYear && (
-            <circle className="chart__dot" cx={geo.x(active.year)} cy={geo.y(active.price_lakhs)} r={4} />
+            <circle className="chart__dot" cx={geo.x(active.year)} cy={geo.y(active.price_tnd)} r={4} />
           )}
         </svg>
 
@@ -135,8 +135,7 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
             {active.year}
             {active.year === selectedYear ? " · your car" : ""}
           </span>
-          <span className="tooltip__v">{formatLakhs(active.price_lakhs)} lakh</span>
-          <span className="tooltip__s">{formatInr(active.price_lakhs)}</span>
+          <span className="tooltip__v">{formatTnd(active.price_tnd)}</span>
         </div>
       </div>
 
@@ -146,7 +145,7 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
           <thead>
             <tr>
               <th scope="col">Year</th>
-              <th scope="col">Price (lakh)</th>
+              <th scope="col">Price (DT)</th>
               <th scope="col">80% band</th>
             </tr>
           </thead>
@@ -154,9 +153,9 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
             {points.map((p) => (
               <tr key={p.year} aria-current={p.year === selectedYear ? "true" : undefined}>
                 <td>{p.year}</td>
-                <td>{formatLakhs(p.price_lakhs)}</td>
+                <td>{formatTnd(p.price_tnd)}</td>
                 <td>
-                  {formatLakhs(p.price_lakhs * lo)} – {formatLakhs(p.price_lakhs * hi)}
+                  {formatTnd(p.price_tnd * lo)} – {formatTnd(p.price_tnd * hi)}
                 </td>
               </tr>
             ))}

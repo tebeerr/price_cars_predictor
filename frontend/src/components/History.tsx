@@ -1,9 +1,9 @@
 import type { CarInput } from "../api";
-import { brandLabel, formatInt, formatLakhs } from "../format";
+import { brandLabel, formatInt, formatTnd } from "../format";
 
 export interface HistoryEntry {
   car: CarInput;
-  price_lakhs: number;
+  price_tnd: number;
   at: number;
 }
 
@@ -48,7 +48,7 @@ export function History({ entries, current, onPick, onClear }: Props) {
                       {formatInt(e.car.km_driven)} km · {e.car.fuel} · {e.car.transmission}
                     </span>
                   </span>
-                  <span className="history__price">{formatLakhs(e.price_lakhs)}</span>
+                  <span className="history__price">{formatTnd(e.price_tnd)}</span>
                 </button>
               </li>
             );

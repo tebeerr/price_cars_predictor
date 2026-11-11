@@ -24,8 +24,9 @@ export interface Range {
 
 export interface SplitMetrics {
   r2_log: number;
-  r2_lakhs: number;
+  r2_price: number;
   mae_lakhs: number;
+  mae_tnd: number;
 }
 
 export interface ModelMetrics {
@@ -51,6 +52,7 @@ export interface Meta {
   ranges: Record<"year" | "km_driven" | "engine_cc" | "max_power_bhp" | "selling_price", Range>;
   reference_year: number;
   metrics: Record<ModelName, ModelMetrics>;
+  currency: { code: "TND"; tnd_per_inr: number; tnd_per_lakh: number };
 }
 
 export interface Contribution {
@@ -61,14 +63,13 @@ export interface Contribution {
 
 export interface CurvePoint {
   year: number;
-  price_lakhs: number;
+  price_tnd: number;
 }
 
 export interface ModelPrediction {
-  price_lakhs: number;
-  price_inr: number;
-  low_lakhs: number;
-  high_lakhs: number;
+  price_tnd: number;
+  low_tnd: number;
+  high_tnd: number;
   contributions: Contribution[];
   depreciation: CurvePoint[];
 }

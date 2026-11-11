@@ -1,11 +1,15 @@
-const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 const grouped = new Intl.NumberFormat("en-IN");
+const tndNumber = new Intl.NumberFormat("fr-TN", { maximumFractionDigits: 0 });
 
-/** 5.42 → "₹5,42,000" */
-export const formatInr = (lakhs: number) => inr.format(Math.round(lakhs * 100_000));
+/** 12950.4 → "12 950" (Tunisian grouping, whole dinars) */
+export const formatTndNumber = (tnd: number) => tndNumber.format(Math.round(tnd));
 
-/** 5.4231 → "5.42" */
-export const formatLakhs = (lakhs: number, digits = 2) => lakhs.toFixed(digits);
+/** 12950.4 → "12 950 DT" */
+export const formatTnd = (tnd: number) => `${formatTndNumber(tnd)} DT`;
+
+/** Axis ticks: 15000 → "15k" */
+export const formatTndShort = (tnd: number) =>
+  tnd >= 1000 ? `${+(tnd / 1000).toFixed(1)}k` : String(Math.round(tnd));
 
 export const formatInt = (n: number) => grouped.format(Math.round(n));
 

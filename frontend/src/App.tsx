@@ -7,10 +7,10 @@ import { Estimate } from "./components/Estimate";
 import { Segmented } from "./components/Fields";
 import { History, type HistoryEntry } from "./components/History";
 import { ModelCard } from "./components/ModelCard";
-import { formatLakhs, MODEL_LABELS } from "./format";
+import { formatTnd, MODEL_LABELS } from "./format";
 import { usePrediction } from "./usePrediction";
 
-const HISTORY_KEY = "valuer.history.v1";
+const HISTORY_KEY = "valuer.history.v2"; // v2: prices stored in TND
 const THEME_KEY = "valuer.theme";
 const MODEL_KEY = "valuer.model";
 
@@ -84,9 +84,9 @@ export default function App() {
 
   const save = useCallback(() => {
     if (!data || !car) return;
-    const price = data.predictions[model].price_lakhs;
+    const price = data.predictions[model].price_tnd;
     setHistory((h) =>
-      [{ car, price_lakhs: price, at: Date.now() }, ...h.filter((e) => JSON.stringify(e.car) !== JSON.stringify(car))].slice(0, 8),
+      [{ car, price_tnd: price, at: Date.now() }, ...h.filter((e) => JSON.stringify(e.car) !== JSON.stringify(car))].slice(0, 8),
     );
   }, [data, car, model]);
 
@@ -180,7 +180,7 @@ export default function App() {
                   {/* Small screens: the form comes first, so keep the answer in reach. */}
                   <a className={`pricebar${loading ? " is-stale" : ""}`} href="#estimate-title">
                     <span className="pricebar__label">Estimate</span>
-                    <span className="pricebar__value">{formatLakhs(data.predictions[model].price_lakhs)} lakh</span>
+                    <span className="pricebar__value">{formatTnd(data.predictions[model].price_tnd)}</span>
                     <span className="pricebar__go">See details</span>
                   </a>
                 </>

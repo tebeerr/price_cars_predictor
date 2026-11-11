@@ -1,15 +1,15 @@
 import type { Meta, ModelName } from "../api";
-import { formatInt, MODEL_LABELS } from "../format";
+import { formatInt, formatTnd, MODEL_LABELS } from "../format";
 
 interface Props {
   meta: Meta;
   model: ModelName;
 }
 
-const ROWS: { key: "r2_log" | "r2_lakhs" | "mae_lakhs"; label: string; fmt: (v: number) => string }[] = [
+const ROWS: { key: "r2_log" | "r2_price" | "mae_tnd"; label: string; fmt: (v: number) => string }[] = [
   { key: "r2_log", label: "R² on log price", fmt: (v) => v.toFixed(3) },
-  { key: "r2_lakhs", label: "R² on price", fmt: (v) => v.toFixed(3) },
-  { key: "mae_lakhs", label: "Mean abs. error", fmt: (v) => `${v.toFixed(2)} lakh` },
+  { key: "r2_price", label: "R² on price", fmt: (v) => v.toFixed(3) },
+  { key: "mae_tnd", label: "Mean abs. error", fmt: formatTnd },
 ];
 
 export function ModelCard({ meta, model }: Props) {
@@ -58,8 +58,9 @@ export function ModelCard({ meta, model }: Props) {
 
       <p className="model__foot">
         Both fit log(price) on standardised inputs. LassoCV picked α = {lasso.alpha?.toPrecision(2)} and kept{" "}
-        {lasso.non_zero_coefficients} of {meta.metrics.linear.non_zero_coefficients} coefficients. Prices are in
-        lakh (1 lakh = ₹1,00,000); age is measured from {meta.reference_year}.
+        {lasso.non_zero_coefficients} of {meta.metrics.linear.non_zero_coefficients} coefficients. Every price here is converted to Tunisian dinars at{" "}
+        {meta.currency.tnd_per_inr} DT.
+        It does not adjust for the Tunisian market. Age is measured from {meta.reference_year}.
       </p>
     </section>
   );
