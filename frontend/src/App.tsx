@@ -14,8 +14,6 @@ const HISTORY_KEY = "valuer.history.v1";
 const THEME_KEY = "valuer.theme";
 const MODEL_KEY = "valuer.model";
 
-
-
 const readStore = <T,>(key: string, fallback: T): T => {
   try {
     const raw = localStorage.getItem(key);
