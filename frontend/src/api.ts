@@ -5,13 +5,13 @@ export type ModelName = "linear" | "lasso";
 
 export interface CarInput {
   brand: string;
+  car_model: string;
   year: number;
   km_driven: number;
   fuel: Fuel;
   seller_type: SellerType;
   transmission: Transmission;
   owner: number;
-  engine_cc: number;
   max_power_bhp: number;
   seats: number;
 }
@@ -26,16 +26,43 @@ export interface SplitMetrics {
   r2_log: number;
   r2_price: number;
   mae_lakhs: number;
-  mae_tnd: number;
+}
+
+/** How the Tunisian calibration did on real Tunisian listings. */
+export interface TunisiaMetrics {
+  listings: number;
+  car_models: string[];
+  /** Median |error| / price, each car model predicted by a calibration fitted without it. */
+  median_ape: number;
+  /** Same, converting the Indian price at the exchange rate only. */
+  naive_median_ape: number;
+  residual_q10: number;
+  residual_q90: number;
 }
 
 export interface ModelMetrics {
   train: SplitMetrics;
   test: SplitMetrics;
-  residual_q10: number;
-  residual_q90: number;
+  tunisia: TunisiaMetrics;
   non_zero_coefficients: number;
   alpha?: number;
+}
+
+/** Specs of a typical listing of one model, used to prefill the form. */
+export interface TypicalSpecs {
+  fuel: Fuel;
+  transmission: Transmission;
+  seats: number;
+  max_power_bhp: number;
+}
+
+export interface CarModelInfo {
+  /** Model name, or "Other" for the pooled rare models of a brand. */
+  name: string;
+  listings: number;
+  /** For "Other": the rare models pooled under it. */
+  pooled: string[];
+  typical: TypicalSpecs;
 }
 
 export interface Meta {
@@ -44,15 +71,19 @@ export interface Meta {
   train_rows: number;
   test_rows: number;
   brands: string[];
+  models_by_brand: Record<string, CarModelInfo[]>;
+  min_model_listings: number;
   fuel: Fuel[];
   seller_type: SellerType[];
   transmission: Transmission[];
   owner: number[];
   seats: number[];
-  ranges: Record<"year" | "km_driven" | "engine_cc" | "max_power_bhp" | "selling_price", Range>;
-  reference_year: number;
+  ranges: Record<"year" | "km_driven" | "max_power_bhp", Range>;
+  data_year: number;
+  market_year: number;
+  km_per_year: number;
   metrics: Record<ModelName, ModelMetrics>;
-  currency: { code: "TND"; tnd_per_inr: number; tnd_per_lakh: number };
+  currency: { code: "TND" };
 }
 
 export interface Contribution {
@@ -96,10 +127,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     });
   } catch (err) {
     if ((err as Error).name === "AbortError") throw err;
-    throw new ApiError("The prediction service is unreachable.", 0);
+    throw new ApiError("Le service de prédiction est injoignable.", 0);
   }
   if (!res.ok) {
-    let detail = `Request failed (${res.status})`;
+    let detail = `Échec de la requête (${res.status})`;
     try {
       const body = await res.json();
       if (Array.isArray(body.detail)) {
@@ -111,7 +142,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       /* non-JSON error body */
     }
     // Vite's proxy answers 5xx when the backend is down.
-    if (res.status === 502 || res.status === 504) throw new ApiError("The prediction service is unreachable.", 0);
+    if (res.status === 502 || res.status === 504) throw new ApiError("Le service de prédiction est injoignable.", 0);
     throw new ApiError(detail, res.status);
   }
   return res.json() as Promise<T>;

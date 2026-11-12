@@ -16,14 +16,14 @@ export function DriversChart({ contributions }: Props) {
   return (
     <figure className="panel drivers">
       <figcaption className="panel__head">
-        <h3 className="panel__title">What moves this price</h3>
-        <p className="panel__sub">Each input’s effect against the average car in the training data.</p>
-        <ul className="legend" aria-label="Legend">
+        <h3 className="panel__title">Ce qui fait varier le prix</h3>
+        <p className="panel__sub">Effet de chaque caractéristique par rapport à la voiture moyenne des données.</p>
+        <ul className="legend" aria-label="Légende">
           <li>
-            <span className="legend__swatch legend__swatch--up" /> Raises price
+            <span className="legend__swatch legend__swatch--up" /> Augmente le prix
           </li>
           <li>
-            <span className="legend__swatch legend__swatch--down" /> Lowers price
+            <span className="legend__swatch legend__swatch--down" /> Baisse le prix
           </li>
         </ul>
       </figcaption>
@@ -38,7 +38,7 @@ export function DriversChart({ contributions }: Props) {
               key={c.feature}
               className={`drivers__row${active === c.feature ? " is-active" : ""}`}
               tabIndex={0}
-              aria-label={`${label}: ${formatPct(c.pct_effect)} ${up ? "above" : "below"} the average car`}
+              aria-label={`${label} : ${formatPct(c.pct_effect)} ${up ? "au-dessus de" : "en dessous de"} la voiture moyenne`}
               onPointerEnter={() => setActive(c.feature)}
               onPointerLeave={() => setActive(null)}
               onFocus={() => setActive(c.feature)}
@@ -56,10 +56,10 @@ export function DriversChart({ contributions }: Props) {
                 <span className="tooltip tooltip--row" role="presentation">
                   <span className="tooltip__k">{label}</span>
                   <span className="tooltip__v">
-                    ×{Math.exp(c.log_effect).toFixed(3)} on price
+                    ×{Math.exp(c.log_effect).toFixed(3).replace(".", ",")} sur le prix
                   </span>
                   <span className="tooltip__s">
-                    {up ? "Pushes above" : "Pulls below"} the average car by {formatPct(c.pct_effect).replace(/^[+−]/, "")}
+                    {up ? "Au-dessus de" : "En dessous de"} la voiture moyenne de {formatPct(c.pct_effect).replace(/^[+−]/, "")}
                   </span>
                 </span>
               )}

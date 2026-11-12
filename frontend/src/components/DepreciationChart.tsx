@@ -35,8 +35,8 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
     return () => ro.disconnect();
   }, []);
 
-  const lo = Math.exp(metrics.residual_q10);
-  const hi = Math.exp(metrics.residual_q90);
+  const lo = Math.exp(metrics.tunisia.residual_q10);
+  const hi = Math.exp(metrics.tunisia.residual_q90);
 
   const geo = useMemo(() => {
     const innerW = width - M.left - M.right;
@@ -72,8 +72,8 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
   return (
     <figure className="panel chart">
       <figcaption className="panel__head">
-        <h3 className="panel__title">Same car, other model years</h3>
-        <p className="panel__sub">Predicted price if everything else stayed equal. Shaded: 80% band.</p>
+        <h3 className="panel__title">La même voiture, d’autres années</h3>
+        <p className="panel__sub">Prix estimé si seule l’année change. Zone grisée : fourchette à 80 %. Cliquez sur une année pour l’appliquer.</p>
       </figcaption>
 
       <div className="chart__plot" ref={wrapRef}>
@@ -82,7 +82,7 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
           height={H}
           viewBox={`0 0 ${width} ${H}`}
           role="img"
-          aria-label={`Predicted price by model year, from ${formatTnd(points[0].price_tnd)} in ${points[0].year} to ${formatTnd(points[points.length - 1].price_tnd)} in ${points[points.length - 1].year}. Use left and right arrows to inspect years; Enter to apply.`}
+          aria-label={`Prix estimé par année, de ${formatTnd(points[0].price_tnd)} en ${points[0].year} à ${formatTnd(points[points.length - 1].price_tnd)} en ${points[points.length - 1].year}. Flèches gauche et droite pour parcourir les années, Entrée pour appliquer.`}
           tabIndex={0}
           onPointerMove={(e) => setHover(yearAt(e.clientX, e.currentTarget))}
           onPointerLeave={() => setHover(null)}
@@ -133,20 +133,20 @@ export function DepreciationChart({ points, selectedYear, metrics, onPickYear }:
         <div className="tooltip" style={{ left: tipLeft }} aria-hidden="true">
           <span className="tooltip__k">
             {active.year}
-            {active.year === selectedYear ? " · your car" : ""}
+            {active.year === selectedYear ? " · votre voiture" : ""}
           </span>
           <span className="tooltip__v">{formatTnd(active.price_tnd)}</span>
         </div>
       </div>
 
       <details className="chart__table">
-        <summary>View as table</summary>
+        <summary>Voir le tableau</summary>
         <table>
           <thead>
             <tr>
-              <th scope="col">Year</th>
-              <th scope="col">Price (DT)</th>
-              <th scope="col">80% band</th>
+              <th scope="col">Année</th>
+              <th scope="col">Prix (DT)</th>
+              <th scope="col">Fourchette 80 %</th>
             </tr>
           </thead>
           <tbody>

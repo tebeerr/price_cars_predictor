@@ -1,30 +1,45 @@
 import type { Meta, ModelName } from "../api";
-import { formatInt, formatTnd, MODEL_LABELS } from "../format";
+import { formatInt, MODEL_LABELS } from "../format";
 
 interface Props {
   meta: Meta;
   model: ModelName;
 }
 
-const ROWS: { key: "r2_log" | "r2_price" | "mae_tnd"; label: string; fmt: (v: number) => string }[] = [
-  { key: "r2_log", label: "R² on log price", fmt: (v) => v.toFixed(3) },
-  { key: "r2_price", label: "R² on price", fmt: (v) => v.toFixed(3) },
-  { key: "mae_tnd", label: "Mean abs. error", fmt: formatTnd },
-];
+const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
+const r2 = (v: number) => v.toFixed(3).replace(".", ",");
 
 export function ModelCard({ meta, model }: Props) {
   const names: ModelName[] = ["linear", "lasso"];
-  const lasso = meta.metrics.lasso;
+  const tn = meta.metrics[model].tunisia;
+
+  const rows: { label: string; value: (n: ModelName) => string; sub?: (n: ModelName) => string }[] = [
+    {
+      label: "Erreur médiane, annonces tunisiennes",
+      value: (n) => pct(meta.metrics[n].tunisia.median_ape),
+      sub: (n) => `taux de change seul : ${pct(meta.metrics[n].tunisia.naive_median_ape)}`,
+    },
+    {
+      label: "R² sur le prix (CarDekho, test)",
+      value: (n) => r2(meta.metrics[n].test.r2_price),
+      sub: (n) => `entraînement ${r2(meta.metrics[n].train.r2_price)}`,
+    },
+    {
+      label: "R² sur log(prix) (CarDekho, test)",
+      value: (n) => r2(meta.metrics[n].test.r2_log),
+      sub: (n) => `entraînement ${r2(meta.metrics[n].train.r2_log)}`,
+    },
+  ];
 
   return (
     <section className="panel model" aria-labelledby="model-title">
       <div className="panel__head">
         <h3 className="panel__title" id="model-title">
-          How far to trust it
+          Quelle confiance accorder à l’estimation
         </h3>
         <p className="panel__sub">
-          Scores on {formatInt(meta.test_rows)} held-out cars (20% split), after training on{" "}
-          {formatInt(meta.train_rows)}.
+          Le modèle apprend la valeur relative des voitures sur {formatInt(meta.rows)} annonces CarDekho (Inde), puis
+          il est calibré sur {tn.listings} annonces tunisiennes réelles.
         </p>
       </div>
 
@@ -32,7 +47,7 @@ export function ModelCard({ meta, model }: Props) {
         <table className="model__table">
           <thead>
             <tr>
-              <th scope="col">Test set</th>
+              <th scope="col">Mesure</th>
               {names.map((n) => (
                 <th scope="col" key={n} className={n === model ? "is-current" : undefined}>
                   {MODEL_LABELS[n]}
@@ -41,13 +56,13 @@ export function ModelCard({ meta, model }: Props) {
             </tr>
           </thead>
           <tbody>
-            {ROWS.map((r) => (
-              <tr key={r.key}>
+            {rows.map((r) => (
+              <tr key={r.label}>
                 <th scope="row">{r.label}</th>
                 {names.map((n) => (
                   <td key={n} className={n === model ? "is-current" : undefined}>
-                    {r.fmt(meta.metrics[n].test[r.key])}
-                    <span className="model__train">train {r.fmt(meta.metrics[n].train[r.key])}</span>
+                    {r.value(n)}
+                    {r.sub && <span className="model__train">{r.sub(n)}</span>}
                   </td>
                 ))}
               </tr>
@@ -57,10 +72,11 @@ export function ModelCard({ meta, model }: Props) {
       </div>
 
       <p className="model__foot">
-        Both fit log(price) on standardised inputs. LassoCV picked α = {lasso.alpha?.toPrecision(2)} and kept{" "}
-        {lasso.non_zero_coefficients} of {meta.metrics.linear.non_zero_coefficients} coefficients. Every price here is converted to Tunisian dinars at{" "}
-        {meta.currency.tnd_per_inr} DT.
-        It does not adjust for the Tunisian market. Age is measured from {meta.reference_year}.
+        L’erreur tunisienne est mesurée en retirant chaque modèle de voiture du calibrage avant de le prédire (
+        {tn.car_models.join(", ")}). Les prix tunisiens sont environ 2 fois plus élevés qu’en Inde pour une voiture
+        récente, et jusqu’à 6 fois pour une voiture ancienne : la calibration en tient compte. Annonces relevées sur
+        autoprix.tn et automobile.tn en novembre {meta.market_year}. Les prix réels varient selon l’état, les options et
+        la négociation.
       </p>
     </section>
   );

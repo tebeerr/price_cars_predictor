@@ -34,16 +34,23 @@ export function SelectField(props: {
   label: string;
   value: string;
   options: { value: string; label: string }[];
+  hint?: string;
   onChange: (v: string) => void;
 }) {
   const id = useId();
+  const hintId = useId();
   return (
     <div className="field">
       <label className="field__label" htmlFor={id}>
         {props.label}
       </label>
       <div className="select">
-        <select id={id} value={props.value} onChange={(e) => props.onChange(e.target.value)}>
+        <select
+          id={id}
+          value={props.value}
+          aria-describedby={props.hint ? hintId : undefined}
+          onChange={(e) => props.onChange(e.target.value)}
+        >
           {props.options.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
@@ -54,6 +61,11 @@ export function SelectField(props: {
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
         </svg>
       </div>
+      {props.hint && (
+        <p className="field__hint" id={hintId}>
+          {props.hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -122,7 +134,7 @@ export function RangeField(props: {
       <input
         type="range"
         className="slider"
-        aria-label={`${props.label} slider`}
+        aria-label={`${props.label} (curseur)`}
         min={props.min}
         max={props.max}
         step={props.step}
@@ -131,7 +143,7 @@ export function RangeField(props: {
         onChange={(e) => props.onChange(Number(e.target.value))}
       />
       <p className="field__hint" id={hintId}>
-        {invalid ? `Enter a value between ${props.min} and ${props.max}.` : props.hint}
+        {invalid ? `Saisissez une valeur entre ${props.min} et ${props.max}.` : props.hint}
       </p>
     </div>
   );

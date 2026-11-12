@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { ModelName, PredictionResponse } from "../api";
-import { formatPct, formatTnd, formatTndNumber, MODEL_LABELS } from "../format";
+import { carLabel, formatInt, formatPct, formatTnd, formatTndNumber, MODEL_LABELS } from "../format";
+import { BrandLogo } from "./BrandPicker";
 
 interface Props {
   data: PredictionResponse;
@@ -11,6 +12,7 @@ interface Props {
 
 export function Estimate({ data, model, stale, action }: Props) {
   const p = data.predictions[model];
+  const car = data.input;
   const otherName: ModelName = model === "linear" ? "lasso" : "linear";
   const other = data.predictions[otherName];
   const diff = ((other.price_tnd - p.price_tnd) / p.price_tnd) * 100;
@@ -21,16 +23,29 @@ export function Estimate({ data, model, stale, action }: Props) {
 
   return (
     <section className={`estimate${stale ? " is-stale" : ""}`} aria-labelledby="estimate-title" aria-busy={stale}>
+      <div className="estimate__car">
+        <BrandLogo brand={car.brand} size={48} />
+        <div>
+          <p className="estimate__name">
+            {carLabel(car.brand, car.car_model)} <span className="estimate__year">{car.year}</span>
+          </p>
+          <p className="estimate__specs">{formatInt(car.km_driven)} km</p>
+        </div>
+      </div>
+
       <h2 id="estimate-title" className="estimate__label">
-        Estimated selling price
+        Prix estimé sur le marché tunisien
       </h2>
       <p className="estimate__value" aria-live="polite">
         <span className="estimate__num">{formatTndNumber(p.price_tnd)}</span>
         <span className="estimate__unit">DT</span>
       </p>
-      <p className="estimate__cur">Tunisian dinars</p>
 
-      <div className="band" role="img" aria-label={`80% band from ${formatTnd(p.low_tnd)} to ${formatTnd(p.high_tnd)}`}>
+      <div
+        className="band"
+        role="img"
+        aria-label={`Fourchette à 80 % : de ${formatTnd(p.low_tnd)} à ${formatTnd(p.high_tnd)}`}
+      >
         <div className="band__track">
           <span className="band__dot" style={{ left: `${pos}%` }} />
         </div>
@@ -40,11 +55,12 @@ export function Estimate({ data, model, stale, action }: Props) {
         </div>
       </div>
       <p className="estimate__note">
-        For 8 in 10 held-out test cars, the real price landed inside a band this wide around the estimate.
+        Sur des annonces tunisiennes réelles, 8 prix sur 10 tombaient dans une fourchette aussi large autour de
+        l’estimation.
       </p>
 
       <p className="estimate__compare">
-        {MODEL_LABELS[otherName]} says <strong>{formatTnd(other.price_tnd)}</strong>{" "}
+        {MODEL_LABELS[otherName]} : <strong>{formatTnd(other.price_tnd)}</strong>{" "}
         <span className="muted">({formatPct(diff)})</span>
       </p>
       {action}

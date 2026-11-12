@@ -8,9 +8,10 @@ import { Segmented } from "./components/Fields";
 import { History, type HistoryEntry } from "./components/History";
 import { ModelCard } from "./components/ModelCard";
 import { formatTnd, MODEL_LABELS } from "./format";
+import { typicalKm, withModel } from "./components/CarForm";
 import { usePrediction } from "./usePrediction";
 
-const HISTORY_KEY = "valuer.history.v2"; // v2: prices stored in TND
+const HISTORY_KEY = "valuer.history.v4"; // v4: Tunisian prices, no engine size
 const THEME_KEY = "valuer.theme";
 const MODEL_KEY = "valuer.model";
 
@@ -30,19 +31,24 @@ const writeStore = (key: string, value: unknown) => {
   }
 };
 
+/** A common Tunisian car: Hyundai i10 from 2018, with typical specs and km. */
 function typicalCar(meta: Meta): CarInput {
-  return {
-    brand: meta.brands.includes("Maruti") ? "Maruti" : meta.brands[0],
-    year: meta.ranges.year.median,
-    km_driven: meta.ranges.km_driven.median,
+  const brand = meta.brands.includes("Hyundai") ? "Hyundai" : meta.brands[0];
+  const year = 2018;
+  const base: CarInput = {
+    brand,
+    car_model: meta.models_by_brand[brand][0].name,
+    year,
+    km_driven: typicalKm(meta, year),
     fuel: "Petrol",
     seller_type: "Individual",
     transmission: "Manual",
     owner: 0,
-    engine_cc: 1197,
     max_power_bhp: 82,
     seats: 5,
   };
+  const i10 = meta.models_by_brand[brand].find((m) => m.name === "i10");
+  return withModel(meta, base, i10?.name ?? base.car_model);
 }
 
 type Theme = "light" | "dark" | "system";
@@ -52,6 +58,7 @@ export default function App() {
   const [metaError, setMetaError] = useState<ApiError | null>(null);
   const [metaTry, setMetaTry] = useState(0);
   const [car, setCar] = useState<CarInput | null>(null);
+  const [kmAuto, setKmAuto] = useState(true);
   const [model, setModel] = useState<ModelName>(() => readStore<ModelName>(MODEL_KEY, "linear"));
   const [theme, setTheme] = useState<Theme>(() => readStore<Theme>(THEME_KEY, "system"));
   const [history, setHistory] = useState<HistoryEntry[]>(() => readStore<HistoryEntry[]>(HISTORY_KEY, []));
@@ -98,21 +105,21 @@ export default function App() {
       <header className="topbar">
         <div className="brandmark">
           <span className="brandmark__name">Valuer</span>
-          <span className="brandmark__sub">Used-car price model · {meta ? `${meta.rows.toLocaleString("en-IN")} CarDekho listings` : "CarDekho data"}</span>
+          <span className="brandmark__sub">Estimation du prix des voitures d’occasion en Tunisie</span>
         </div>
         <div className="topbar__tools">
           <div className="topbar__model">
             <Segmented
-              label="Model"
+              label="Modèle ML"
               value={model}
               options={["linear", "lasso"] as const}
               render={(v) => (v === "linear" ? "Linear" : "Lasso")}
               onChange={setModel}
             />
           </div>
-          <button type="button" className="btn btn--icon" onClick={cycleTheme} aria-label={`Theme: ${theme}. Change theme`}>
+          <button type="button" className="btn btn--icon" onClick={cycleTheme} aria-label={`Thème : ${theme === "system" ? "auto" : theme === "dark" ? "sombre" : "clair"}. Changer de thème`}>
             <ThemeIcon theme={theme} />
-            <span className="btn__text">{theme === "system" ? "Auto" : theme === "dark" ? "Dark" : "Light"}</span>
+            <span className="btn__text">{theme === "system" ? "Auto" : theme === "dark" ? "Sombre" : "Clair"}</span>
           </button>
         </div>
       </header>
@@ -121,30 +128,42 @@ export default function App() {
         <main className="state">
           {metaError ? (
             <div className="state__box" role="alert">
-              <h1 className="state__title">Can’t reach the model</h1>
-              <p>Start the API, then try again:</p>
+              <h1 className="state__title">Impossible de joindre le modèle</h1>
+              <p>Démarrez l’API, puis réessayez :</p>
               <pre className="state__code">cd backend{"\n"}.venv\Scripts\activate{"\n"}uvicorn app:app --port 8000</pre>
               <button type="button" className="btn btn--primary" onClick={() => setMetaTry((n) => n + 1)}>
-                Try again
+                Réessayer
               </button>
             </div>
           ) : (
-            <p className="state__loading">Loading the model…</p>
+            <p className="state__loading">Chargement du modèle…</p>
           )}
         </main>
       ) : (
         car && (
           <main className="bench">
             <aside className="bench__controls">
-              <CarForm meta={meta} car={car} onChange={setCar} onReset={() => setCar(typicalCar(meta))} />
+              <CarForm
+                meta={meta}
+                car={car}
+                kmAuto={kmAuto}
+                onChange={(next, opts) => {
+                  if (opts?.kmTouched) setKmAuto(false);
+                  setCar(next);
+                }}
+                onReset={() => {
+                  setKmAuto(true);
+                  setCar(typicalCar(meta));
+                }}
+              />
             </aside>
 
             <div className="bench__output">
               {error && (
                 <div className="alert" role="alert">
-                  <span>{error.status === 0 ? "Lost the connection to the model." : error.message}</span>
+                  <span>{error.status === 0 ? "Connexion au modèle perdue." : error.message}</span>
                   <button type="button" className="btn btn--link" onClick={retry}>
-                    Retry
+                    Réessayer
                   </button>
                 </div>
               )}
@@ -158,7 +177,7 @@ export default function App() {
                       stale={loading}
                       action={
                         <button type="button" className="btn btn--primary" onClick={save} disabled={loading || isSaved}>
-                          {isSaved ? "Saved" : "Save estimate"}
+                          {isSaved ? "Enregistrée" : "Enregistrer l’estimation"}
                         </button>
                       }
                     />
@@ -179,13 +198,13 @@ export default function App() {
 
                   {/* Small screens: the form comes first, so keep the answer in reach. */}
                   <a className={`pricebar${loading ? " is-stale" : ""}`} href="#estimate-title">
-                    <span className="pricebar__label">Estimate</span>
+                    <span className="pricebar__label">Estimation</span>
                     <span className="pricebar__value">{formatTnd(data.predictions[model].price_tnd)}</span>
-                    <span className="pricebar__go">See details</span>
+                    <span className="pricebar__go">Voir le détail</span>
                   </a>
                 </>
               ) : (
-                !error && <p className="state__loading">Pricing your car…</p>
+                !error && <p className="state__loading">Estimation en cours…</p>
               )}
             </div>
           </main>
@@ -194,7 +213,8 @@ export default function App() {
 
       <footer className="footnote">
         <p>
-          {MODEL_LABELS[model]} trained on log(price) from the CarDekho merged dataset. An estimate, not an offer.
+          {MODEL_LABELS[model]} entraînée sur log(prix) (données CarDekho), calibrée sur des annonces tunisiennes. Une
+          estimation, pas une offre d’achat. Logos : propriété de leurs marques respectives.
         </p>
       </footer>
     </div>

@@ -1,5 +1,6 @@
 import type { CarInput } from "../api";
-import { brandLabel, formatInt, formatTnd } from "../format";
+import { carLabel, FUEL_LABELS, formatInt, formatTnd, TRANSMISSION_LABELS } from "../format";
+import { BrandLogo } from "./BrandPicker";
 
 export interface HistoryEntry {
   car: CarInput;
@@ -20,16 +21,16 @@ export function History({ entries, current, onPick, onClear }: Props) {
     <section className="panel history" aria-labelledby="history-title">
       <div className="panel__head panel__head--row">
         <h3 className="panel__title" id="history-title">
-          Saved estimates
+          Estimations enregistrées
         </h3>
         {entries.length > 0 && (
           <button type="button" className="btn btn--link" onClick={onClear}>
-            Clear
+            Effacer
           </button>
         )}
       </div>
       {entries.length === 0 ? (
-        <p className="panel__sub">Save an estimate to compare cars side by side. Saved cars stay in this browser.</p>
+        <p className="panel__sub">Enregistrez une estimation pour comparer plusieurs voitures. Elles restent dans ce navigateur.</p>
       ) : (
         <ol className="history__list">
           {entries.map((e) => {
@@ -42,10 +43,11 @@ export function History({ entries, current, onPick, onClear }: Props) {
                   onClick={() => onPick(e.car)}
                   aria-current={isCurrent ? "true" : undefined}
                 >
+                  <BrandLogo brand={e.car.brand} size={32} />
                   <span className="history__car">
-                    {brandLabel(e.car.brand)} · {e.car.year}
+                    {carLabel(e.car.brand, e.car.car_model)} · {e.car.year}
                     <span className="history__meta">
-                      {formatInt(e.car.km_driven)} km · {e.car.fuel} · {e.car.transmission}
+                      {formatInt(e.car.km_driven)} km · {FUEL_LABELS[e.car.fuel]} · {TRANSMISSION_LABELS[e.car.transmission]}
                     </span>
                   </span>
                   <span className="history__price">{formatTnd(e.price_tnd)}</span>
